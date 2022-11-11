@@ -1,9 +1,10 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/userModel")
+const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
+const config = require("../config/env.json");
 
 async function register(req, res){
     const user = new User(req.body);
-    user.password = await bcrypt.hashSync(user.password, 8)
     await user.save()
     .then(doc => {
         doc.password = undefined;
@@ -36,7 +37,8 @@ async function login(req, res){
         if(!authentication) {
             return res.status(400).json({erro: "Password is Invalid"});
         }
-        return res.json({email: email, token: "abcd"})
+        const token = jwt.sign({id: doc._id}, config.segredo, {expiresIn: "1d"});
+        return res.json({email, token});
     })
     .catch(error => {
         return res.status(500).json(error);
